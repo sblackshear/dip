@@ -7,7 +7,7 @@ type: Informational
 created: 3/24/2021
 ---
 
-Diem Framework transactions contain Move transaction scripts that change on-chain state (e.g., balances) by invoking functions of Move modules published on-chain. This DIP explains both the mechanics of transaction scripts and the process for adding, removing, and changing scripts. This DIP does *not* document the specific scripts that are available to Diem users, but the complete list of scripts can be found in the [Diem developer docs](https://github.com/diem/diem/blob/main/language/diem-framework/transaction_scripts/doc/transaction_script_documentation.md).
+Diem Framework transactions contain Move transaction scripts that change on-chain state (e.g., balances) by invoking functions of Move modules published on-chain. This DIP explains both the mechanics of transaction scripts and the process for adding, removing, and changing scripts. This DIP does *not* document the specific scripts that are available to Diem users, but the complete list of scripts can be found in the [Diem developer docs](https://github.com/diem/diem/blob/main/language/diem-framework/releases/artifacts/current/docs/scripts/script_documentation.md).
 
 ### Transaction payloads
 
@@ -33,7 +33,7 @@ The two `TransactionPayload` variants relevant to this DIP are `ScriptFunction` 
 Both script functions and the single function in a transaction script bytecode file have the following restrictions. For a function` f<ability_params>(param_types): ret_types` :
 
 * The `ret_types` list is empty (i.e., the function does not return a value)
-* The `param_types` list begins with one or more `signer` types
+* The `param_types` list begins with one or more [`signer`](https://developers.diem.com/main/docs/move-primitives-signer) types
 * No `signer` type appears after a non-`signer` type in `param_types`
     * E.g., `f(signer)`, `f(signer, u64)`, and `f(signer, signer, bool)` satisfy this condition
     * E.g., `f(u64, signer)`, `f(signer, u64, signer)`, `f(signer, bool, u64, signer)` do not satisfy this condition
@@ -64,6 +64,8 @@ The type arguments `ty_args` are a list of Move types. Each type must either be 
 
 The value arguments `args` are a list of BCS-encoded values. The length of `args` and `param_types` must be the same. Each value argument must deserialize correctly according to its corresponding type in `param_types`.
 
+Note: `ModuleId`, `Identifier`, and `TypeTag` are all part of the move-core-types [crate](https://github.com/diem/diem/tree/main/language/move-core/types/src).
+
 ## Transaction Scripts
 
 A transaction script is a Move bytecode program that contains a single function `f`. The signature of `f` must satisfy the script signature requirements described below.
@@ -78,7 +80,7 @@ pub struct Script {
 }
 ```
 
-Here, `code` is a Move bytecode program. The `ty_args` are the same as for script functions. The `args` are a list of `TransactionArgument`s instead of a list of BCS-encoded values.
+Here, `code` is a Move bytecode program. The `ty_args` are the same as for script functions. The `args` are a list of [`TransactionArgument](https://github.com/diem/diem/blob/main/language/move-core/types/src/transaction_argument.rs)'s instead of a list of BCS-encoded values.
 
 Only a restricted set of programs can be included in `code`. The allowed programs are specified in an on-chain allowlist published at `0x1::DiemTransactionPublishingOption::DiemTransactionPublishingOption.script_allowlist`. The allowlist contains the sha3-256 hash of each program rather than the code itself.
 
@@ -104,7 +106,7 @@ In general, both existing script functions and transaction scripts from the allo
 ### Changing script functions
 
 * The name and type signature of an existing script function will never be changed.
-* The set of error codes that may be returned by a script function is included in the [developer documentation](https://github.com/diem/diem/blob/main/language/diem-framework/transaction_scripts/doc/transaction_script_documentation.md) for each script. The error codes returned by a script function may grow or shrink, but the meaning of a given error code will remain fixed. E.g.:
+* The set of error codes that may be returned by a script function is included in the [developer documentation](https://github.com/diem/diem/blob/main/language/diem-framework/releases/artifacts/current/docs/scripts/script_documentation.md) for each script. The error codes returned by a script function may grow or shrink, but the meaning of a given error code will remain fixed. E.g.:
     *  If the error code 72 in script fun `f` means “insufficient balance” in one Diem release, 72 will continue to have this meaning in future releases.
     * It is permissible for a future release to change `f` so that it no longer returns code 72.
     * It is permissible for a future release to change `f` so that it now returns code 75 in addition to 72.
